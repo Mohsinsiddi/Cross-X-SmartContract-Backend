@@ -83,6 +83,45 @@ dotenv.config();
       return new Web3( new Web3WsProvider(process.env.RINKBEY_INFURA, options));
  }
 
+  // WEB# providers for catching events on POLYGON
+
+  function web3POLYProviderHTTP (){
+    const provider = new HDWalletProvider({
+        mnemonic: process.env.MNEMONICS,
+        providerOrUrl: process.env.POLYGON_HTTP_INFURA
+      });
+      return new Web3(provider);
+  }
+  
+  function web3EPOLYProvider(){
+    const provider = new HDWalletProvider({
+        mnemonic: process.env.MNEMONICS,
+        providerOrUrl: process.env.POLYGON_INFURA,
+        pollingInterval: 8000,
+      });
+      return new Web3(provider);
+  }
+  
+  function web3PolygonProvider(){
+    const options = {
+        timeout: 30000, // ms
+        // clientConfig: {
+        //   // Useful to keep a connection alive
+        //   keepalive: true,
+        //   keepaliveInterval: 60000 // ms
+        // },
+        // Enable auto reconnection
+        reconnect: {
+          auto: true,
+          delay: 5000, // ms
+          maxAttempts: 5,
+          onTimeout: false,
+        },
+      };
+      return new Web3( new Web3WsProvider(process.env.POLYGON_INFURA, options));
+  }
+  
+
 
  // COINGECKO Prices API configs
 
@@ -101,4 +140,4 @@ dotenv.config();
 
 export {web3EThProviderHTTP,web3BSCProvider,web3BinanceProvider,
        web3BSCProviderHTTP,web3ETHprovider,web3EthereumProvider,
-       coinGeckoPrice};
+       coinGeckoPrice,web3POLYProviderHTTP,web3EPOLYProvider,web3PolygonProvider};

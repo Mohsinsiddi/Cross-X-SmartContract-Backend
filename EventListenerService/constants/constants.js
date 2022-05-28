@@ -3,13 +3,17 @@ const BRIDGE_RINKBEY = "0x3b99a659AD59ED01B352159ABdFE5B0E3Ce2f25c"
 
 const BRIDGE_BSC_TESTNET="0xa149C13e16E5b38E34F0107A71df69F0b2DBfD52"
 
+const BRIDGE_POLY_TESTNET="0xD256A6C08D00975886947A79e57B1963F4cdceB5"
+
 const Token_Rinkbey="0x6cDd2aC516a6c1c6410938D313a24035De4C7A43"
 
 const Token_Binance="0xA98d378c3d8f4B8B9dfB86b12ABC39B6B4197314"
+
+const Token_Poly ="0xEd22DCA00B4d71F08bc184574b028c4Dc53479DE"
 
 
 const ETHChainId="0x3"
 const BNBChainId="0x61"
 const coinGecko="https://api.coingecko.com/api/v3/simple/price"
 
-module.exports = {BRIDGE_RINKBEY,Token_Rinkbey,BRIDGE_BSC_TESTNET,Token_Binance,ETHChainId,BNBChainId,coinGecko}
+module.exports = {BRIDGE_RINKBEY,Token_Rinkbey,BRIDGE_BSC_TESTNET,Token_Binance,BRIDGE_POLY_TESTNET,Token_Poly,ETHChainId,BNBChainId,coinGecko}

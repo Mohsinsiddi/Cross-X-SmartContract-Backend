@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import logger from '../winstonconfig';
 import bridge from '../artifacts/contracts/BridgeWrapperETH.sol/BridgeWrapperETH.json'
-import { web3BSCProviderHTTP, web3EthereumProvider, web3POLYProviderHTTP } from './config/config';
+import { web3BSCProviderHTTP, web3EThProviderHTTP, web3PolygonProvider } from './config/config';
 import { BRIDGE_BSC_TESTNET, BRIDGE_POLY_TESTNET, BRIDGE_RINKBEY} from './constants/constants';
 
 dotenv.config();
@@ -21,7 +21,9 @@ dotenv.config();
   
   //ETHEREUM PROVIDER && ETH_BRIDGE CONTRACT INIT FOR EVENTS
 
-  const web3Ethereum = web3EthereumProvider();
+  const web3Ethereum = web3EThProviderHTTP();
+
+  const { address: adminETH } = web3Ethereum.eth.accounts.wallet.add(adminPrivKey);
   
   const ETHBridgeInstance = new web3Ethereum.eth.Contract(
     bridge.abi,
@@ -29,9 +31,8 @@ dotenv.config();
   );
 
   // POYLYGON PROVIDER && POLY_BRIDGE CONTRACT INIT
-  const web3POLY = web3POLYProviderHTTP();
+  const web3POLY = web3PolygonProvider();
 
-  const { address: adminPOLY } = web3POLY.eth.accounts.wallet.add(adminPrivKey);
 
   const POLYBridgeInstance = new web3POLY.eth.Contract(
     bridge.abi,
@@ -39,18 +40,18 @@ dotenv.config();
   );
 
 
-  ETHBridgeInstance.events.DEPOSIT({ fromBlock: 'latest'}).on('data',async  event => {
+  POLYBridgeInstance.events.DEPOSIT({ fromBlock: 'latest'}).on('data',async  event => {
     try{
-    console.log('Ethereum Deposit event catched');
+    console.log('Polygon Deposit event catched');
     console.log(event.returnValues)
-    logger.ETHInfoLogger.info('Ethereum Deposit event catched');
+    logger.POLYInfoLogger.info('Polygon Deposit event catched');
     let { tamount, sender,tokenAddress,tokenName,destinationChainId} = event.returnValues;
   
     tamount = tamount.replace(/\s+/g, '');
     sender = sender.replace(/\s+/g, '');
     tokenAddress = tokenAddress.replace(/\s+/g, '');
 
-    logger.ETHInfoLogger.info(
+    logger.POLYInfoLogger.info(
       ' amount = ' + tamount +
       ' depositer = ' + sender +
       ' tokenAddress = ' + tokenAddress +
@@ -63,7 +64,7 @@ dotenv.config();
     if (destinationChainId == "97"){
       
         console.log(
-            tokenName + ' token transfer started from contract owner to user on Ethereum to Binance.'
+            tokenName + ' token transfer started from contract owner to user on Polygon to Binance.'
           );
           let BNBTokenAddress = await BSCBridgeInstance.methods.whitelistedTokenAddress(tokenName).call();
           console.log(BNBTokenAddress);
@@ -95,35 +96,35 @@ dotenv.config();
             - amount ${tamount} tokens
           `);
           console.log(
-            tokenName + ' token transfer done from contract owner to user on Ethereum to Binance.'
+            tokenName + ' token transfer done from contract owner to user on Polygon to Binance.'
           );    
       }
-      else if(destinationChainId == "80001"){
+      else if(destinationChainId == "4"){
 
         console.log(
-          tokenName + ' token transfer started from contract owner to user on Ethereum to Polygon.'
+          tokenName + ' token transfer started from contract owner to user on Polygon to Ethereum.'
         );
-        let PolyTokenAddress = await POLYBridgeInstance.methods.whitelistedTokenAddress(tokenName).call();
-        console.log(PolyTokenAddress);
+        let ETHTokenAddress = await ETHBridgeInstance.methods.whitelistedTokenAddress(tokenName).call();
+        console.log(ETHTokenAddress);
 
-        const tx = POLYBridgeInstance.methods.withdraw(tamount,PolyTokenAddress,sender);
+        const tx = ETHBridgeInstance.methods.withdraw(tamount,ETHTokenAddress,sender);
 
         const [gasPrice, gasCost] = await Promise.all([
-          web3POLY.eth.getGasPrice(),
-          tx.estimateGas({from:adminPOLY}),
+            web3Ethereum.eth.getGasPrice(),
+          tx.estimateGas({from:adminETH}),
         ]);
 
         const data = tx.encodeABI();
 
         const txData = {
-          from: adminPOLY,
-          to: POLYBridgeInstance.options.address,
+          from: adminETH,
+          to: ETHBridgeInstance.options.address,
           data,
           gas: gasCost,
           gasPrice
         };
 
-        const receipt = await web3POLY.eth.sendTransaction(txData);
+        const receipt = await web3Ethereum.eth.sendTransaction(txData);
 
         console.log(`Transaction hash: ${receipt.transactionHash}`);
         console.log(`
@@ -133,7 +134,7 @@ dotenv.config();
           - amount ${tamount} tokens
         `);
         console.log(
-          tokenName + ' token transfer done from contract owner to user on Ethereum to Polygon.'
+          tokenName + ' token transfer done from contract owner to user on Polygon to Ethereum.'
         ); 
 
       }
@@ -141,7 +142,7 @@ dotenv.config();
       }
       catch(err){
       let { tamount, sender,tokenAddress,tokenName } = event.returnValues;
-      logger.ETHErrorLogger.error
+      logger.POLYErrorLogger.error
       (
         ' An error encountered while transferring ' + tamount +
         ' ERC20 token from contract to user : ' + sender +

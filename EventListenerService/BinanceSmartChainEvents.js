@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import logger from '../winstonconfig';
 import bridge from '../artifacts/contracts/BridgeWrapperETH.sol/BridgeWrapperETH.json'
-import { web3EThProviderHTTP, web3BinanceProvider } from './config/config';
-import { BRIDGE_BSC_TESTNET, BRIDGE_RINKBEY} from './constants/constants';
+import { web3EThProviderHTTP, web3BinanceProvider, web3POLYProviderHTTP } from './config/config';
+import { BRIDGE_BSC_TESTNET, BRIDGE_POLY_TESTNET, BRIDGE_RINKBEY} from './constants/constants';
 
 dotenv.config();
 
@@ -27,6 +27,17 @@ dotenv.config();
     bridge.abi,
     BRIDGE_BSC_TESTNET
   );
+
+   // POYLYGON PROVIDER && POLY_BRIDGE CONTRACT INIT
+   const web3POLY = web3POLYProviderHTTP();
+
+   const { address: adminPOLY } = web3POLY.eth.accounts.wallet.add(adminPrivKey);
+ 
+   const POLYBridgeInstance = new web3POLY.eth.Contract(
+     bridge.abi,
+     BRIDGE_POLY_TESTNET
+   );
+ 
 
   BNBBridgeInstance.events.DEPOSIT({ fromBlock: 'latest'}).on('data',async  event => {
     try{
@@ -86,6 +97,44 @@ dotenv.config();
           console.log(
             tokenName + ' token transfer done from contract owner to user on Binance to Ethereum.'
           );    
+      }
+      else if(destinationChainId == "80001"){
+        console.log(
+          tokenName + ' token transfer started from contract owner to user on Binance to Polygon.'
+        );
+        let PolyTokenAddress = await POLYBridgeInstance.methods.whitelistedTokenAddress(tokenName).call();
+        console.log(PolyTokenAddress);
+
+        const tx = POLYBridgeInstance.methods.withdraw(tamount,PolyTokenAddress,sender);
+
+        const [gasPrice, gasCost] = await Promise.all([
+          web3POLY.eth.getGasPrice(),
+          tx.estimateGas({from:adminPOLY}),
+        ]);
+
+        const data = tx.encodeABI();
+
+        const txData = {
+          from: adminPOLY,
+          to: POLYBridgeInstance.options.address,
+          data,
+          gas: gasCost,
+          gasPrice
+        };
+
+        const receipt = await web3POLY.eth.sendTransaction(txData);
+
+        console.log(`Transaction hash: ${receipt.transactionHash}`);
+        console.log(`
+          Processed transfer:
+          - from ${sender} 
+          - to ${sender} 
+          - amount ${tamount} tokens
+        `);
+        console.log(
+          tokenName + ' token transfer done from contract owner to user on Binance to Polygon.'
+        ); 
+
       }
     else throw new Error('Ether gas transfer confirmation failed');
       }

@@ -3,6 +3,7 @@ const app = express();
 app.use(express.json());
 import "./EventListenerService/EthereumEvents.js"
 import "./EventListenerService/BinanceSmartChainEvents.js";
+import "./EventListenerService/PolygonEvents.js"
 
 process.on("uncaughtException", function (err) {
   //Added this just for testing

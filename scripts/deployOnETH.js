@@ -14,7 +14,7 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const BridgeWrapper = await hre.ethers.getContractFactory("BridgeWrapper");
+  const BridgeWrapper = await hre.ethers.getContractFactory("BridgeWrapperETH");
   const bridgeWrapper = await BridgeWrapper.deploy();
 
   await bridgeWrapper.deployed();

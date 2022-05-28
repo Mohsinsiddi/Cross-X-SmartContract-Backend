@@ -4,7 +4,7 @@
   "description": "Cross chain platform to move assets across multiple chain",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nodemon app.js --exec node_modules/.bin/babel-node index.js"
   },
   "repository": {
     "type": "git",
@@ -39,6 +39,19 @@
     "solidity-coverage": "^0.7.21"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.6.0"
+    "@babel/cli": "^7.17.10",
+    "@babel/core": "^7.18.2",
+    "@babel/node": "^7.17.10",
+    "@babel/preset-env": "^7.18.2",
+    "@openzeppelin/contracts": "^4.6.0",
+    "@truffle/hdwallet-provider": "^2.0.8",
+    "axios": "^0.27.2",
+    "coingecko-api": "^1.0.10",
+    "express": "^4.18.1",
+    "nodemon": "^2.0.16",
+    "uuid": "^8.3.2",
+    "web3": "^1.7.3",
+    "web3-providers-ws": "^1.7.3",
+    "winston": "^3.7.2"
   }
 }

@@ -1,1 +1,0 @@
-#Cross|X| - Smart Contracts - Backend

@@ -5,9 +5,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract BridgeWrapper is Ownable {
-
-        
-        uint256 bridgeFeePercent = 5;
+  
+        uint256 bridgeFeePercent = 2;
         uint256 index = 1;
 
         bool public isBlocked;
@@ -284,6 +283,4 @@ contract BridgeWrapper is Ownable {
             return true;
         }
 
-
-   
 }

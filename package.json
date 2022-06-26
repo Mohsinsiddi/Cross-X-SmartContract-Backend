@@ -4,7 +4,7 @@
   "description": "Cross chain platform to move assets across multiple chain",
   "main": "index.js",
   "scripts": {
-    "test": "nodemon app.js --exec node_modules/.bin/babel-node index.js"
+    "run:service": "nodemon app.js --exec node_modules/.bin/babel-node index.js"
   },
   "repository": {
     "type": "git",

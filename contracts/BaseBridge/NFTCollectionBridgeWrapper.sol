@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../PeggedNFT.sol";
+import "../LazyNFT.sol";
 
 contract NFTCollectionBridgeWrapper is Ownable {
     uint256 bridgeFeePercent = 2;
@@ -28,6 +30,7 @@ contract NFTCollectionBridgeWrapper is Ownable {
         uint256 tokenID,
         address sender,
         address collectionAddress,
+        string uri,
         string collectionName,
         uint256 destinationChainId
     );
@@ -172,12 +175,13 @@ contract NFTCollectionBridgeWrapper is Ownable {
         string memory collectionName = whitelistedCollectionName[
             collectionAddress
         ];
-        if (isMinted[collectionAddress] || isPegged[collectionAddress]) {
-            IERC721(collectionAddress).transferFrom(
-                msg.sender,
-                address(this),
-                _tokenID
-            );
+        string memory uri;
+        if (isMinted[collectionAddress]) {
+            uri = LazyNFT(collectionAddress).tokenURI(_tokenID);
+            LazyNFT(collectionAddress).burn(_tokenID, _msgSender());
+        } else if (isPegged[collectionAddress]) {
+            uri = PeggedNFT(collectionAddress).tokenURI(_tokenID);
+            PeggedNFT(collectionAddress).burn(_tokenID, _msgSender());
         } else {
             bridgeFee[collectionAddress] =
                 bridgeFee[collectionAddress] +
@@ -194,6 +198,7 @@ contract NFTCollectionBridgeWrapper is Ownable {
             _tokenID,
             msg.sender,
             collectionAddress,
+            uri,
             collectionName,
             _destChainId
         );
@@ -204,7 +209,8 @@ contract NFTCollectionBridgeWrapper is Ownable {
         uint256 amount,
         uint256 _tokenID,
         address collectionAddress,
-        address receiver
+        address receiver,
+        string memory uri
     ) external onlyOwner returns (bool) {
         require(collectionAddress != address(0), "Cannot be address 0");
         require(receiver != address(0), "Cannot be address 0");
@@ -212,12 +218,10 @@ contract NFTCollectionBridgeWrapper is Ownable {
             isWhitelisted[collectionAddress] == true,
             "This token is not Whitelisted on our platform"
         );
-        if (isMinted[collectionAddress] || isPegged[collectionAddress]) {
-            IERC721(collectionAddress).transferFrom(
-                address(this),
-                receiver,
-                _tokenID
-            );
+        if (isMinted[collectionAddress]) {
+            LazyNFT(collectionAddress).mint(receiver, _tokenID, uri);
+        } else if (isPegged[collectionAddress]) {
+            PeggedNFT(collectionAddress).mint(receiver, _tokenID, uri);
         } else {
             bridgeFee[collectionAddress] =
                 bridgeFee[collectionAddress] +

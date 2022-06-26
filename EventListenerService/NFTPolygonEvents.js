@@ -1,17 +1,15 @@
 import dotenv from "dotenv";
-import logger from "../winstonconfig";
-import bridge from "../artifacts/contracts/BridgeWrapperETH.sol/BridgeWrapperETH.json";
+import NFTBridge from "../artifacts/contracts/BaseBridge/NFTCollectionBridgeWrapper.sol/NFTCollectionBridgeWrapper.json";
 import {
   web3BSCProviderHTTP,
   web3EThProviderHTTP,
   web3PolygonProvider,
 } from "./config/config";
 import {
-  BRIDGE_BSC_TESTNET,
-  BRIDGE_POLY_TESTNET,
-  BRIDGE_RINKBEY,
+  NFT_BRDIGE_RINKBEY,
+  NFT_BRDIGE_POLYGON,
+  NFT_BRDIGE_BSC,
 } from "./constants/constants";
-
 dotenv.config();
 
 // ADMIN CREDENTIALS
@@ -23,8 +21,8 @@ const web3BNB = web3BSCProviderHTTP();
 const { address: adminBSC } = web3BNB.eth.accounts.wallet.add(adminPrivKey);
 
 const BSCBridgeInstance = new web3BNB.eth.Contract(
-  bridge.abi,
-  BRIDGE_BSC_TESTNET
+  NFTBridge.abi,
+  NFT_BRDIGE_BSC
 );
 
 //ETHEREUM PROVIDER && ETH_BRIDGE CONTRACT INIT FOR EVENTS
@@ -35,56 +33,43 @@ const { address: adminETH } =
   web3Ethereum.eth.accounts.wallet.add(adminPrivKey);
 
 const ETHBridgeInstance = new web3Ethereum.eth.Contract(
-  bridge.abi,
-  BRIDGE_RINKBEY
+  NFTBridge.abi,
+  NFT_BRDIGE_RINKBEY
 );
 
 // POYLYGON PROVIDER && POLY_BRIDGE CONTRACT INIT
 const web3POLY = web3PolygonProvider();
 
-const POLYBridgeInstance = new web3POLY.eth.Contract(
-  bridge.abi,
-  BRIDGE_POLY_TESTNET
+const POLYNFTBridgeInstance = new web3POLY.eth.Contract(
+  NFTBridge.abi,
+  NFT_BRDIGE_POLYGON
 );
 
-POLYBridgeInstance.events
+POLYNFTBridgeInstance.events
   .DEPOSIT({ fromBlock: "latest" })
   .on("data", async (event) => {
     try {
       console.log("Polygon Deposit event catched");
       console.log(event.returnValues);
-      logger.POLYInfoLogger.info("Polygon Deposit event catched");
-      let { tamount, sender, tokenAddress, tokenName, destinationChainId } =
-        event.returnValues;
-
+      let {
+        tamount,
+        tokenID,
+        sender,
+        collectionAddress,
+        uri,
+        collectionName,
+        destinationChainId,
+      } = event.returnValues;
       tamount = tamount.replace(/\s+/g, "");
       sender = sender.replace(/\s+/g, "");
-      tokenAddress = tokenAddress.replace(/\s+/g, "");
-
-      logger.POLYInfoLogger.info(
-        " amount = " +
-          tamount +
-          " depositer = " +
-          sender +
-          " tokenAddress = " +
-          tokenAddress +
-          " tokenName = " +
-          tokenName,
-        {
-          tamount,
-          sender,
-          tokenAddress,
-          tokenName,
-        }
-      );
-
+      collectionAddress = collectionAddress.replace(/\s+/g, "");
       if (destinationChainId == "97") {
         console.log(
-          tokenName +
+          collectionName +
             " token transfer started from contract owner to user on Polygon to Binance."
         );
         let BNBTokenAddress = await BSCBridgeInstance.methods
-          .whitelistedTokenAddress(tokenName)
+          .whitelistedCollectionAddress(collectionName)
           .call();
         console.log(BNBTokenAddress);
 
@@ -115,22 +100,22 @@ POLYBridgeInstance.events
 
         console.log(`Transaction hash: ${receipt.transactionHash}`);
         console.log(`
-            Processed transfer:
-            - from ${sender} 
-            - to ${sender} 
-            - amount ${tamount} tokens
-          `);
+        Processed Cross chain NFT transfer:
+        - from ${sender} 
+        - to ${sender} 
+        - tokenID ${tokenID} tokens
+      `);
         console.log(
-          tokenName +
+          collectionName +
             " token transfer done from contract owner to user on Polygon to Binance."
         );
       } else if (destinationChainId == "4") {
         console.log(
-          tokenName +
+          collectionName +
             " token transfer started from contract owner to user on Polygon to Ethereum."
         );
         let ETHTokenAddress = await ETHBridgeInstance.methods
-          .whitelistedTokenAddress(tokenName)
+          .whitelistedCollectionAddress(collectionName)
           .call();
         console.log(ETHTokenAddress);
 
@@ -161,40 +146,19 @@ POLYBridgeInstance.events
 
         console.log(`Transaction hash: ${receipt.transactionHash}`);
         console.log(`
-          Processed transfer:
-          - from ${sender} 
-          - to ${sender} 
-          - amount ${tamount} tokens
-        `);
+            Processed Cross chain NFT transfer:
+            - from ${sender} 
+            - to ${sender} 
+            - tokenID ${tokenID} tokens
+          `);
         console.log(
-          tokenName +
+          collectionName +
             " token transfer done from contract owner to user on Polygon to Ethereum."
         );
       } else throw new Error("Ether gas transfer confirmation failed");
     } catch (err) {
-      let { tamount, sender, tokenAddress, tokenName } = event.returnValues;
-      logger.POLYErrorLogger.error(
-        " An error encountered while transferring " +
-          tamount +
-          " ERC20 token from contract to user : " +
-          sender +
-          " tokenAddress = " +
-          tokenAddress +
-          " tokenName = " +
-          tokenName +
-          " with errorName " +
-          err.name +
-          " with errorMessage " +
-          err.message,
-        {
-          tamount,
-          sender,
-          tokenAddress,
-          tokenName,
-          errorName: err.name,
-          errorMessage: err.message,
-        }
-      );
+      let { tamount, sender, collectionAddress, collectionName } =
+        event.returnValues;
       console.log(err.name);
       console.log(err.message);
       console.log(err);

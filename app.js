@@ -10,8 +10,8 @@ process.on("uncaughtException", function (err) {
   console.log(err);
 });
 
-app.get("/isworking", (res, req) => {
-  res.send(200);
+app.get("/isBridgeServiceWorking", (req, res) => {
+  res.send("Yes Bridge Service is working pretty well");
 });
 
 app.listen(5000, () => {
